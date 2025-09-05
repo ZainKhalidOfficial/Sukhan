@@ -1,3 +1,5 @@
+'use client';
+
 import Image from "next/image";
 
 import { 
@@ -11,7 +13,6 @@ import {
     SignedIn, 
     SignedOut, 
     SignInButton, 
-    SignUpButton, 
     UserButton 
 } from "@clerk/clerk-react";
 
@@ -37,14 +38,14 @@ export const Header = () => {
                     <Loader className="h-5 w-5 text-muted-foreground animate-spin" />
                 </ClerkLoading>
 
-                <ClerkLoaded>
+                <ClerkLoaded >
                     <SignedIn>
-                        <UserButton />
+                        <UserButton  />
                     </SignedIn>
 
                     <SignedOut>
-                        <SignInButton mode="modal">
-                            <Button size="lg" variant={"ghost"}> 
+                        <SignInButton mode="modal" fallbackRedirectUrl={"/learn"} signUpFallbackRedirectUrl={"/learn"} >
+                            <Button size="lg" variant={"ghost"} > 
                                 Sign In
                             </ Button>
                         </ SignInButton>
