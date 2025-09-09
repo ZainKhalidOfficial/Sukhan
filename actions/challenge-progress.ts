@@ -1,11 +1,12 @@
 "use server";
 
-import db from "@/db/drizzle";
-import { getUserProgress } from "@/db/queries";
-import { challengeProgress, challenges, userProgress } from "@/db/schema";
 import { auth } from "@clerk/nextjs/server";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+
+import db from "@/db/drizzle";
+import { getUserProgress } from "@/db/queries";
+import { challengeProgress, challenges, userProgress } from "@/db/schema";
 
 export const upsertChallengeProgress = async (challengeId: number) => {
     const { userId } = await auth()!
@@ -35,7 +36,7 @@ export const upsertChallengeProgress = async (challengeId: number) => {
     const existingChallengeProgress = await db.query.challengeProgress.findFirst({
         where: and(
             eq(challengeProgress.userId, userId),
-            eq(challengeProgress.id, challengeId)
+            eq(challengeProgress.challengeId, challengeId)
         ),
     });
 

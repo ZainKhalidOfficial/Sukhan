@@ -7,6 +7,7 @@ import { Challenge } from "./challenge";
 import { Footer } from "./footer";
 import { upsertChallengeProgress } from "@/actions/challenge-progress";
 import { toast } from "sonner";
+import { reduceHearts } from "@/actions/user-progress";
 
 type Props = {
  initialPercentage: number;
@@ -27,7 +28,7 @@ export const Quiz = ({
     userSubscription
 }: Props) => {
 
-    const [isPending, startTransition] = useTransition();
+    const [pending, startTransition] = useTransition();
 
     const [hearts, setHearts] = useState(initialHearts);
     const [percentage, setPercentage] = useState(initialPercentage);
@@ -97,9 +98,25 @@ export const Quiz = ({
                     }).catch(() => toast.error("Something went wrong. Please try again."))
             })
         } else {
-            console.log("Incorrect Option!")
+            startTransition(() => {
+                reduceHearts(challenge.id)
+                    .then((response) => {
+                        if (response?.error === "hearts") {
+                            console.log("Missing Hearts");
+                            return;
+                        }
+
+                        setStatus("wrong");
+
+                        if (!response?.error) {
+                            setHearts((prev) => Math.max(prev - 1, 0));
+                        }
+                    })
+                    .catch(() => toast.error("Something went wrong. Please try again."))
+            })
         }
     }
+    
      const title = challenge.type === "ASSIST"
         ? "Select the correct meaning"
         : challenge.question;
@@ -128,7 +145,7 @@ export const Quiz = ({
                                 onSelect={onSelect}
                                 status={status}
                                 selectedOption={selectedOption}
-                                disabled={false}
+                                disabled={pending}
                                 type={challenge.type}
                             />
                         </div>
@@ -137,7 +154,7 @@ export const Quiz = ({
             </div>
 
             <Footer 
-                disabled={!selectedOption}
+                disabled={pending || !selectedOption}
                 status={status}
                 onCheck={onContinue}
             />
