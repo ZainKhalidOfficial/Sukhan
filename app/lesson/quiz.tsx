@@ -1,7 +1,7 @@
 'use client';
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { useAudio, useWindowSize } from "react-use";
+import { useAudio, useMount, useWindowSize } from "react-use";
 import Image from "next/image";
 import Confetti from "react-confetti";
 
@@ -14,6 +14,8 @@ import { upsertChallengeProgress } from "@/actions/challenge-progress";
 import { toast } from "sonner";
 import { reduceHearts } from "@/actions/user-progress";
 import { ResultCard } from "./result-card";
+import { usePracticeModal } from "@/store/use-practice-modal";
+import { useHeartsModal } from "@/store/use-hearts-modal";
 
 type Props = {
  initialPercentage: number;
@@ -33,6 +35,16 @@ export const Quiz = ({
     initialLessonChallenges,
     userSubscription
 }: Props) => {
+
+    const { open: openHeartsModal } = useHeartsModal();
+    const { open: openPracticeModal } = usePracticeModal();
+
+    useMount(() =>  {
+        if(initialPercentage === 100) {
+            openPracticeModal();
+        }
+    });
+
     const {width, height} = useWindowSize();
 
     const router = useRouter();
@@ -44,7 +56,9 @@ export const Quiz = ({
 
     const [lessonId] = useState(initialLessonId);
     const [hearts, setHearts] = useState(initialHearts);
-    const [percentage, setPercentage] = useState(initialPercentage);
+    const [percentage, setPercentage] = useState(() => {
+        return initialPercentage === 100 ? 0 : initialPercentage
+    });
 
     const [challenges] = useState(initialLessonChallenges);
 
@@ -97,7 +111,7 @@ export const Quiz = ({
                 upsertChallengeProgress(challenge.id)
                     .then((response) => {
                         if (response?.error === "hearts") {
-                            console.error("Missing hearts");
+                            openHeartsModal();
                             return;
                         }
                         correctControls.play();
@@ -115,7 +129,7 @@ export const Quiz = ({
                 reduceHearts(challenge.id)
                     .then((response) => {
                         if (response?.error === "hearts") {
-                            console.log("Missing Hearts");
+                            openHeartsModal();
                             return;
                         }
                         incorrectControls.play();
@@ -138,7 +152,7 @@ export const Quiz = ({
                     width={width}
                     height={height}
                     recycle={false}
-                    numberOfPieces={200}
+                    numberOfPieces={500}
                     tweenDuration={10000}
                 />
                 <div className="flex flex-col gap-y-4 lg:gap-y-8 mx-w-lg mx-auto text-center items-center justify-center h-full">
