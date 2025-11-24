@@ -5,7 +5,7 @@ import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 import db from "@/db/drizzle";
-import { getUserProgress } from "@/db/queries";
+import { getUserProgress, getUserSubscription } from "@/db/queries";
 import { challengeProgress, challenges, userProgress } from "@/db/schema";
 
 export const upsertChallengeProgress = async (challengeId: number) => {
@@ -16,8 +16,8 @@ export const upsertChallengeProgress = async (challengeId: number) => {
     }
 
     const currentUserProgress = await getUserProgress();
+    const userSubscriptions = await getUserSubscription();
 
-    //TODO: Handle subscription query later
 
     if(!currentUserProgress) {
         throw new Error("User progress not found!");
@@ -42,8 +42,10 @@ export const upsertChallengeProgress = async (challengeId: number) => {
 
     const isPractice = !!existingChallengeProgress;
 
-    if(currentUserProgress.hearts === 0 && !isPractice) {
-        //Not if the user has a subscription
+    if(currentUserProgress.hearts === 0 
+        && !isPractice
+        && !userSubscriptions?.isActive) {
+
         return {error: "hearts"};
     }
 

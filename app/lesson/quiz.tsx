@@ -5,7 +5,7 @@ import { useAudio, useMount, useWindowSize } from "react-use";
 import Image from "next/image";
 import Confetti from "react-confetti";
 
-import { challengeOptions, challenges } from "@/db/schema";
+import { challengeOptions, challenges, userSubscription } from "@/db/schema";
 import { Header } from "./header";
 import { QuestionBubble } from "./question-bubble";
 import { Challenge } from "./challenge";
@@ -25,8 +25,12 @@ type Props = {
     completed: boolean;
     challengeOptions: typeof challengeOptions.$inferSelect[];
  })[];
- userSubscription: any;
-}
+ userSubscription: typeof userSubscription.$inferSelect & {
+    isActive: boolean;
+ } | null;
+
+};
+
 
 export const Quiz = ({
     initialPercentage,
@@ -39,10 +43,14 @@ export const Quiz = ({
     const { open: openHeartsModal } = useHeartsModal();
     const { open: openPracticeModal } = usePracticeModal();
 
+    const [isClientMounted, setIsClientMounted] = useState(false);
+
     useMount(() =>  {
         if(initialPercentage === 100) {
             openPracticeModal();
         }
+
+        setIsClientMounted(true);    
     });
 
     const {width, height} = useWindowSize();

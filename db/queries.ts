@@ -2,7 +2,7 @@ import { cache } from "react";
 import db from "./drizzle"
 import { auth } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
-import { challengeProgress, courses, lessons, units, userProgress } from "./schema";
+import { challengeProgress, courses, lessons, units, userProgress, userSubscription } from "./schema";
 
 export const getCourses = cache(async () => {
     const data = await db.query.courses.findMany();
@@ -12,8 +12,17 @@ export const getCourses = cache(async () => {
 
 export const getCourseById = cache(async(courseId: number) => {
     const data = await db.query.courses.findFirst({
-        where: eq(courses.id, courseId)
-        //TODO: Populate units and lessons
+        where: eq(courses.id, courseId),
+        with: {
+            units: {
+                orderBy: (units, {asc}) => [asc(units.order)],
+                with: {
+                    lessons: {
+                        orderBy: (lessons, {asc}) => [asc(lessons.order)],
+                    },
+                },
+            },
+        },
     });
 
     return data;
@@ -46,10 +55,13 @@ export const getUnits = cache(async () => {
 
     const data = await db.query.units.findMany({
         where: eq(units.courseId, userProgress.activeCourseId),
+        orderBy: (units, {asc}) => [asc(units.order)],
         with: {
             lessons: {
+                orderBy: (lessons, {asc}) => [asc(lessons.order)],
                 with: {
                     challenges: {
+                        orderBy: (challenges, {asc}) => [asc(challenges.order)],
                         with: {
                             challengeProgress: {
                                 where: eq(challengeProgress.userId, userId)
@@ -195,3 +207,30 @@ export const getLessonPercentage = cache(async () => {
 
     return percentage;
 })
+
+const DAY_IN_MS = 86_400_000;
+
+export const getUserSubscription = cache( async () => {
+    const { userId } = await auth();
+    
+    if (!userId) {
+        return null;
+    }
+
+    const data = await db.query.userSubscription.findFirst({
+        where: eq(userSubscription.userId, userId)
+    })
+
+    if (!data) {
+        return null;
+    }
+
+    const isActive = 
+        data.stripePriceId && 
+        data.stripeCurrentPeriodEnd.getTime()! + DAY_IN_MS > Date.now();
+
+    return {
+        ...data,
+        isActive: !!isActive,
+    };
+});
