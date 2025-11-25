@@ -9,6 +9,8 @@ import { getCourseProgress, getLessonPercentage, getUnits, getUserProgress, getU
 
 import { Header } from "./header";
 import { Unit } from "./unit";
+import { Promo } from "@/components/promo";
+import { Quests } from "@/components/quests";
 
 const LearnPage = async () => {
 
@@ -40,6 +42,8 @@ const LearnPage = async () => {
         redirect("/courses")
     }
 
+    const isPro = !!userSubscription?.isActive;
+
     return ( 
         <div className="flex flex-row-reverse gap-[48px] px-6">
             <StickyWrapper>
@@ -47,8 +51,14 @@ const LearnPage = async () => {
                     activeCourse = {userProgress.activeCourse}
                     hearts = {userProgress.hearts}
                     points = {userProgress.points}
-                    hasActiveSubscription = {!!userSubscription?.isActive}
+                    hasActiveSubscription = {isPro}
                 />
+                    {
+                        !isPro &&
+                        <Promo />
+                    } 
+
+                    <Quests points={userProgress.points} />
             </StickyWrapper>
 
             <FeedWrapper>

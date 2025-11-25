@@ -7,7 +7,6 @@ import { challengeProgress, challenges, userProgress } from "@/db/schema";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { and, eq } from "drizzle-orm";
-import { error } from "console";
 import { POINTS_TO_REFILL } from "@/constants";
 
 
