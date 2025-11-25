@@ -4,7 +4,7 @@ const allowedIds = [
     "user_35knFqTrDEo70Pj38pBlKCcvLmz",
 ];
 
-export const isAdmin = async () => {
+export const getIsAdmin = async () => {
     const { userId } = await auth()
 
     if(!userId) {

@@ -1,12 +1,14 @@
 import {NextResponse} from "next/server";
 
 import db from "@/db/drizzle";
-import { isAdmin } from "@/lib/admin";
+import { getIsAdmin } from "@/lib/admin";
 import { challengeOptions } from "@/db/schema";
 
 export const GET = async () => {
 
-    if(!isAdmin()) {
+    const isAdmin = await getIsAdmin();
+    
+    if(!isAdmin) {
         return new NextResponse("Unauthorized", {status: 401});
     }
 
@@ -17,7 +19,9 @@ export const GET = async () => {
 
 export const POST = async (req: Request) => {
 
-    if(!isAdmin()) {
+    const isAdmin = await getIsAdmin();
+    
+    if(!isAdmin) {
         return new NextResponse("Unauthorized", {status: 401});
     }
 

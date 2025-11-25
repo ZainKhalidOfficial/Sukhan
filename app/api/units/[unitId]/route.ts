@@ -1,55 +1,70 @@
 import db from "@/db/drizzle"
 import { units } from "@/db/schema"
-import { isAdmin } from "@/lib/admin";
+import { getIsAdmin } from "@/lib/admin";
 import { eq } from "drizzle-orm"
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export const GET = async (
-    req: Request,
-{ params }: { params : {unitId: number}}) => {
-
-    if(!isAdmin()) {
+  req: NextRequest,
+  context: { params: Promise<{ unitId: string }> }
+) => {
+    const isAdmin = await getIsAdmin();
+    
+    if(!isAdmin) {
         return new NextResponse("Unauthorized", {status: 401});
     }
 
-    const data = await db.query.units.findFirst({
-        where: eq(units.id, params.unitId)
-    });
+  const { unitId } = await context.params;
+  const id = Number(unitId);
 
-    return NextResponse.json(data);
+  const data = await db.query.units.findFirst({
+    where: eq(units.id, id),
+  });
 
-}
+  return NextResponse.json(data);
+};
 
 export const PUT = async (
-    req: Request,
-{ params }: { params : {unitId: number}}) => {
-
-    if(!isAdmin()) {
+  req: NextRequest,
+  context: { params: Promise<{ unitId: string }> }
+) => {
+    const isAdmin = await getIsAdmin();
+    
+    if(!isAdmin) {
         return new NextResponse("Unauthorized", {status: 401});
     }
 
-    const body = await req.json();
+  const { unitId } = await context.params;
+  const id = Number(unitId);
 
-    const data = await db.update(units).set({
-        ...body
-    }).where(eq(units.id, params.unitId)).returning();
+  const body = await req.json();
 
-    return NextResponse.json(data[0]);
+  const data = await db
+    .update(units)
+    .set(body)
+    .where(eq(units.id, id))
+    .returning();
 
-}
-
+  return NextResponse.json(data[0]);
+};
 
 export const DELETE = async (
-    req: Request,
-{ params }: { params : {unitId: number}}) => {
-
-    if(!isAdmin()) {
+  req: NextRequest,
+  context: { params: Promise<{ unitId: string }> }
+) => {
+    const isAdmin = await getIsAdmin();
+    
+    if(!isAdmin) {
         return new NextResponse("Unauthorized", {status: 401});
     }
 
-    const data = await db.delete(units)
-        .where(eq(units.id, params.unitId)).returning(); 
+  const { unitId } = await context.params;
+  const id = Number(unitId);
 
-    return NextResponse.json(data[0]);
+  const data = await db
+    .delete(units)
+    .where(eq(units.id, id))
+    .returning();
 
-}
+  return NextResponse.json(data[0]);
+};
